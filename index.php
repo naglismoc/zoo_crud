@@ -1,50 +1,27 @@
 <?php
     // inicializavimas. pirmas apsilankymas puslapyje
-    session_start();
-    if(!isset($_SESSION['zoo'])){
-        $_SESSION['zoo'] = [];
-        $_SESSION['id'] = 1;
-    }
+    include("./ZooFunctions.php");
+    init();
+    include("./generateTable.php");
+
     // naujo objekto įrašymas į sesiją
     if(isset($_POST['name']) && !isset($_POST['id'])){
-        $animal = [];
-        $animal['id'] = $_SESSION['id'];
-        $animal['species'] = $_POST['species'];
-        $animal['name'] = $_POST['name'];
-        $animal['age'] = $_POST['age']; 
-
-        $_SESSION['zoo'][] = $animal;
-
-        $_SESSION['id']++;
-        header("location:./");
-        die;
+        store();
     }
+
     // update
-
     if(isset($_POST['name']) && isset($_POST['id'])){
-
-        foreach ($_SESSION['zoo'] as $key => &$animal) {
-
-            if($animal['id'] == $_POST['id']){
-
-                $_SESSION['zoo'][$key]['species'] = $_POST['species'];
-                $_SESSION['zoo'][$key]['name'] = $_POST['name'];
-                $_SESSION['zoo'][$key]['age'] = $_POST['age'];
-                header("location:./");
-                die;   
-            }
-        }
+        update();
     }
+
     // objekto trynimas
     if($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id'])){
-        foreach ($_SESSION['zoo'] as $key => &$animal) {
-            if($animal['id'] == $_POST['id']){
-                unset($_SESSION['zoo'][$key]);
-                header("location:./");
-                die;   
-            }
-        }
+        destroy();
     }
+    // jei redagavimas, formos užpildymui
+    if($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])){
+        $animal = find();
+     }
 ?>
 
 <!DOCTYPE html>
@@ -60,35 +37,23 @@
 
 </head>
 <body>
-<?php
- if($_SERVER['REQUEST_METHOD'] == 'GET' && isset($_GET['id'])){
-     $animal = [];
-     foreach ($_SESSION['zoo'] as $key => $entry) {
-        if($entry['id'] == $_GET['id']){
-            $animal = $entry;
-            break; 
-        }
-     }
-     ?>
+
     <form action="" method="post">
-        <input type="hidden" name="id" value=<?=$animal['id']?>>
-        <input type="text" name="species" value=<?=$animal['species']?>>
-        <input type="text" name="name" value=<?=$animal['name']?>>
-        <input type="text" name="age" value=<?=$animal['age']?>>
+         <?= (isset($animal)) ? '<input type="hidden" name="id" value="'.$animal['id'].'">':""?>
+        <input type="text" name="species" value=<?=(isset($animal)) ? $animal['species'] :""?>>
+        <input type="text" name="name" value=<?=(isset($animal)) ? $animal['name'] :""?>>
+        <input type="text" name="age" value=<?=(isset($animal)) ? $animal['age'] :""?>>
         <button type="submit">atnaujinti</button>
     </form>
 
-<?php }else{ ?>
 
-    <form action="" method="post">
-        <input type="text" name="species">
-        <input type="text" name="name">
-        <input type="text" name="age">
-        <button type="submit">pridėti</button>
-    </form>
+<?php
 
-<?php } ?>
 
+generateTable($_SESSION['zoo']);
+?>
+    
+<!-- 
 <table class="table">
   <tr>
     <th>id</th>
@@ -117,7 +82,7 @@
         </td>
     </tr> 
  <?php } ?>
-</table>
+</table> -->
 
 </body>
 </html>
